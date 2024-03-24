@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String      @id @default(uuid())
+  email               String      @unique
+  password            String
+  isActive            Boolean     @default(false)
+  lastLoginAt         DateTime?   // Nullable, for tracking the last login time
+  failedLoginAttempts Int         @default(0)
+  isLocked            Boolean     @default(false)
+  roles               UserRole[]
+  auditLogs           AuditLog[]  // Relation to AuditLog
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+}
+
+model UserRole {
+  userId    String
+  roleId    String
+  user      User   @relation(fields: [userId], references: [id])
+  role      Role   @relation(fields: [roleId], references: [id])
+  @@id([userId, roleId])
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  users       UserRole[]
+  permissions RolePermission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model RolePermission {
+  roleId      String
+  permissionId String
+  role        Role       @relation(fields: [roleId], references: [id])
+  permission  Permission @relation(fields: [permissionId], references: [name])
+  @@id([roleId, permissionId])
+}
+
+model Permission {
+  name        String          @id @unique
+  roles       RolePermission[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id]) 
+}

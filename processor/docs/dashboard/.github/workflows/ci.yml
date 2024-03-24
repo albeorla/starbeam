@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up environment variables
+        run: |
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> $GITHUB_ENV
+          echo "APP_PORT=3000" >> $GITHUB_ENV
+
+      - name: Build dashboard container
+        run: docker-compose -f ./docker-compose.yml build dashboard
+
+      - name: Run dashboard service (for tests)
+        run: docker-compose -f ./docker-compose.yml up -d dashboard
+
+      - name: Wait for database to be ready
+        run: until docker-compose -f ./docker-compose.yml exec -T postgres pg_isready -U $POSTGRES_USER; do sleep 5; done
+
+      - name: Perform Prisma migrations
+        run: docker-compose -f ./docker-compose.yml exec -T dashboard bunx prisma migrate dev
+        env:
+          DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
+
+      - name: Run tests
+        run: docker-compose -f ./docker-compose.yml exec -T dashboard bun run test
+        env:
+          DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }} 
+          USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+
+      - name: Shutdown
+        run: docker-compose -f ./docker-compose.yml down
