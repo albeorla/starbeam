@@ -1,0 +1,24 @@
+
+@mlabonne on Hugging Face: "⚡ AutoQuant AutoQuant is the evolution of my previous AutoGGUF notebook…"
+
+## Join the conversation
+
+Join the community of Machine Learners and AI enthusiasts.
+
+This could work quite well inside a Space too!
+
+The UX could be really nice imo
+
+You've a A100 at your disposal, Maxim? Or using a cloud version sometime?
+
+I simply use Colab if I want to quantize a 7B model. Otherwise, cloud GPUs when needed.
+
+Hello, firstly thanks for this great notebook. I am trying to use this to quantize my fine-tuned model but i am facing following error:Wrote Hermes-7B-TR/hermes-7b-tr.fp16.bin./llama.cpp/quantize: error while loading shared libraries: libcuda.so.1: cannot open shared object file: No such file or directory./llama.cpp/quantize: error while loading shared libraries: libcuda.so.1: cannot open shared object file: No such file or directory
+
+I had some error with numpy which says to upgrade so i just added pip install -u numpy to this code only.
+
+the model i am trying to quantize is: https://huggingface.co/umarigan/Hermes-7B-TR this model is trl tuned and basely it is on mistral.
+
+Thanks @umarigan !
+
+[Content shortened for saving purposes]

@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",  // For Jest, it's typically easier to work with CommonJS
+    "esModuleInterop": true,
+    // Ensure `noEmit` is false if you're using default-esm preset
+    "noEmit": false
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "extract_and_format_content",
+  "description": "Extracts and formats content from a given URL into markdown",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "The URL of the webpage from which to extract and format the content."
+      }
+    },
+    "required": ["url"]
+  },
+  "returns": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string",
+        "description": "The formatted markdown content of the webpage."
+      }
+    }
+  }
+}

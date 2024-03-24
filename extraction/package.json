@@ -1,0 +1,26 @@
+{
+  "name": "starbeam-extraction",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^5.4.4",
+    "@types/bun": "latest",
+    "@types/node": "^20.12.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "markdownlint": "^0.34.0",
+    "mdast": "^3.0.0",
+    "playwright": "^1.43.0",
+    "prettier": "^3.2.5",
+    "remark": "^15.0.1",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.4",
+    "unist-util-visit": "^5.0.0"
+  }
+}
