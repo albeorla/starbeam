@@ -1,5 +1,7 @@
 import {
+    AuditLog,
     DomainEventPublisher,
+    Permission,
     Role,
     User,
     UserActivatedEvent,
@@ -7,9 +9,9 @@ import {
     UserRoleAssignedEvent,
 } from "../src/domain";
 
-jest.mock('argon2', () => ({
-    hash: jest.fn().mockResolvedValue('hashed_password'),
-  }));
+jest.mock("argon2", () => ({
+  hash: jest.fn().mockResolvedValue("hashed_password"),
+}));
 
 describe("User Entity", () => {
   let user: User;
@@ -47,10 +49,6 @@ describe("User Entity", () => {
     expect(user.getPassword()).toBe("hashed_password");
   });
 
-});
-
-describe("User Entity - Extended Tests", () => {
-  let user: User;
   let role: Role;
 
   beforeEach(async () => {
@@ -83,10 +81,11 @@ describe("User Entity - Extended Tests", () => {
 
   test("Recording unsuccessful login attempts eventually locks the user", () => {
     for (let i = 0; i < 5; i++) {
-      user.recordLoginAttempt(false); 
+      user.recordLoginAttempt(false);
 
-    // Should still be unlocked after 4 failed attempts
-    expect(user.getIsLocked()).toBeFalsy();
+      // Should still be unlocked after 4 failed attempts
+      expect(user.getIsLocked()).toBeFalsy();
+    }
 
     // The 5th attempt should trigger locking
     user.recordLoginAttempt(false);
@@ -110,5 +109,123 @@ describe("User Entity - Extended Tests", () => {
     );
   });
 
+  test("equals", async () => {
+    expect(
+      user.equals(
+        await User.createUser("unique-id", "test@example.com", "password123")
+      )
+    ).toBe(true);
+  });
+
+  test("getIsActive", () => {
+    expect(user.getIsActive()).toBe(false);
+  });
+
+  test("getIsLocked", () => {
+    expect(user.getIsLocked()).toBe(false);
+  });
+
+  test("getRoles", () => {
+    expect(user.getRoles()).toEqual([]);
+    user.addRole(role);
+    expect(user.getRoles()).toEqual([role]);
+  });
+
+  test("getFailedLoginAttempts", () => {
+    expect(user.getFailedLoginAttempts()).toBe(0);
+    user.recordLoginAttempt(false);
+    expect(user.getFailedLoginAttempts()).toBe(1);
+  });
+
+  test("getLastLoginAt", () => {
+    expect(user.getLastLoginAt()).toBeNull();
+    user.recordLoginAttempt(true);
+    expect(user.getLastLoginAt()).toBeDefined();
+    expect(user.getLastLoginAt()!.getTime()).toBeLessThanOrEqual(
+      new Date().getTime()
+    );
+  });
+
+  test('getPassword', () => {
+    expect(user.getPassword()).toBe("hashed_password");
+  });
+
+  test('getId', () => {
+    expect(user.getId()).toBe("unique-id");
+  });
+
+  test('getEmail', () => {
+    expect(user.getEmail()).toBe("test@example.com");
+  });
+
+  test('getAuditLogs', () => {
+    expect(user.getAuditLogs()).toEqual([]);
+    user.recordLoginAttempt(false);
+    expect(user.getAuditLogs()).toHaveLength(1);
+  });
+
+  test('getCreatedAt', () => {
+    expect(user.getCreatedAt()).toBeDefined();
+  });
+
+  test('getUpdatedAt', () => {
+    expect(user.getUpdatedAt()).toBeDefined();
+  });
+
 });
 
+describe("AuditLog Entity", () => {
+    let auditLog: AuditLog;
+    beforeAll(() => {
+        auditLog = new AuditLog("unique-id", "user-id", "action", "details");
+    });
+
+    test('getId', () => {
+        expect(auditLog.getId()).toBe("unique-id");
+    });
+
+    test('getUserId', () => {
+        expect(auditLog.getUserId()).toBe("user-id");
+    });
+
+    test('getAction', () => {
+        expect(auditLog.getAction()).toBe("action");
+    });
+
+    test('getDetails', () => {
+        expect(auditLog.getDetails()).toBe("details");
+    });
+
+    test('getCreatedAt', () => {
+        expect(auditLog.getCreatedAt()).toBeDefined();
+    });
+});
+
+
+describe("Role Entity", () => {
+    let role: Role;
+    role = new Role("role-id", "Contributor");
+  
+    test('getName', () => {
+      expect(role.getName()).toBe("Contributor");
+    });
+  
+    test('assignPermission', () => {
+      role.assignPermission(new Permission("permission-id"));
+      expect(role.getPermissions().length).toBe(1);
+    });
+  
+    test('removePermission', () => {
+      role.removePermission(new Permission("permission-id"));
+      expect(role.getPermissions().length).toBe(0);
+    });
+  
+    test('getPermissions', () => {
+      expect(role.getPermissions().length).toBe(0);
+    });
+  
+    test('equals', () => {
+      expect(role.equals(new Role("role-id", "Contributor"))).toBe(true);
+    });
+  });
+  

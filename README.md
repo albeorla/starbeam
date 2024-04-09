@@ -11,3 +11,13 @@
 ```bash
 docker-compose up -d
 ```
+
+## API Docs
+
+ https://albeorla.github.io/starbeam
+
+## Running Tests
+
+```bash
+bun test
+```
