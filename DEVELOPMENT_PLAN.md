@@ -32,8 +32,10 @@ This document outlines the plan for implementing the core features of our link p
 - [x] Update API route to store links in the database
 
 ### 5. Implement link storage in the database
-- [ ] Update API route to store processed links in the database
-- [ ] Handle potential database errors
+- [x] Update API route to store processed links in the database
+- [x] Handle potential database errors
+- [x] Check for existing links before storing
+- [x] Return appropriate responses for successful storage and errors
 
 ### 6. Improve error handling and user feedback
 - [ ] Enhance error messages in the API route

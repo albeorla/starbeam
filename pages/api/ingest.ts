@@ -44,17 +44,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const linkType = detectLinkType(url);
 
   try {
+    // Check if the link already exists in the database
+    const existingLink = await prisma.link.findFirst({
+      where: { url: url }
+    });
+
+    if (existingLink) {
+      return res.status(200).json({ message: 'Link already exists in the database', link: existingLink });
+    }
+
     // Store the link in the database
-    const link = await prisma.link.create({
+    const newLink = await prisma.link.create({
       data: {
         url,
         type: linkType,
       },
     });
 
-    return res.status(200).json({ message: 'Link processed successfully', link });
+    return res.status(201).json({ message: 'Link processed and stored successfully', link: newLink });
   } catch (error) {
-    console.error('Error storing link:', error);
-    return res.status(500).json({ error: 'Failed to process the link' });
+    console.error('Error processing link:', error);
+    return res.status(500).json({ error: 'An error occurred while processing the link' });
   }
 }
