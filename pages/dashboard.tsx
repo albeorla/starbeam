@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface LinkItem {
   id: number;
@@ -6,13 +7,12 @@ interface LinkItem {
   type: string;
 }
 
-export default function Home() {
+export default function Dashboard() {
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [newLink, setNewLink] = useState({ url: '', type: 'webpage' });
   const [editingLink, setEditingLink] = useState<LinkItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<{ message: string; details: string } | null>(null);
 
   useEffect(() => {
     fetchLinks();
@@ -42,54 +42,27 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setStatus(null);
-    
-    if (!newLink.url) {
-      setStatus({ message: 'Error', details: 'Please enter a valid URL' });
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/links', {
-        method: editingLink ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editingLink ? { ...newLink, id: editingLink.id } : newLink),
+    if (editingLink) {
+      await fetch(`/api/links/${editingLink.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLink),
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus({ message: editingLink ? 'Link Updated' : 'Link Added', details: data.details });
-        setNewLink({ url: '', type: 'webpage' });
-        setEditingLink(null);
-        fetchLinks();
-      } else {
-        setStatus({ message: 'Error', details: data.error });
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setStatus({ 
-        message: 'Error', 
-        details: 'An unexpected error occurred. Please try again later.'
+    } else {
+      await fetch('/api/links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLink),
       });
-    } finally {
-      setIsLoading(false);
     }
+    setNewLink({ url: '', type: 'webpage' });
+    setEditingLink(null);
+    fetchLinks();
   };
 
   const handleDelete = async (id: number) => {
-    try {
-      await fetch(`/api/links/${id}`, { method: 'DELETE' });
-      fetchLinks();
-      setStatus({ message: 'Link Deleted', details: 'The link has been successfully removed.' });
-    } catch (error) {
-      console.error('Error deleting link:', error);
-      setStatus({ message: 'Error', details: 'Failed to delete the link. Please try again.' });
-    }
+    await fetch(`/api/links/${id}`, { method: 'DELETE' });
+    fetchLinks();
   };
 
   const handleEdit = (link: LinkItem) => {
@@ -99,9 +72,8 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Starbeam Link Manager</h1>
-      
-      <form onSubmit={handleSubmit} className="mb-8">
+      <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
+      <form onSubmit={handleSubmit} className="mb-4">
         <div className="form-control">
           <label className="label">
             <span className="label-text">URL</span>
@@ -113,7 +85,6 @@ export default function Home() {
             placeholder="Enter a URL"
             required
             className="input input-bordered w-full"
-            disabled={isLoading}
           />
         </div>
         <div className="form-control mt-2">
@@ -124,36 +95,24 @@ export default function Home() {
             value={newLink.type}
             onChange={(e) => setNewLink({ ...newLink, type: e.target.value })}
             className="select select-bordered w-full"
-            disabled={isLoading}
           >
             <option value="webpage">Webpage</option>
             <option value="github">GitHub</option>
             <option value="youtube">YouTube</option>
           </select>
         </div>
-        <button 
+        <button
           type="submit"
           className="btn btn-primary mt-4 w-full"
-          disabled={isLoading}
         >
-          {isLoading ? 'Processing...' : (editingLink ? 'Update Link' : 'Add Link')}
+          {editingLink ? 'Update Link' : 'Add Link'}
         </button>
       </form>
-
-      {status && (
-        <div className={`alert ${status.message === 'Error' ? 'alert-error' : 'alert-success'} mb-4`}>
-          <span className="font-bold">{status.message}</span>
-          <span>{status.details}</span>
-        </div>
-      )}
-
-      <h2 className="text-2xl font-bold mb-4">Managed Links</h2>
-      
-      {isLoading && <div className="loading loading-spinner loading-lg"></div>}
-      
-      {error && <div className="alert alert-error">{error}</div>}
-      
-      {!isLoading && !error && (
+      {isLoading ? (
+        <div className="loading loading-spinner loading-lg"></div>
+      ) : error ? (
+        <div className="alert alert-error">{error}</div>
+      ) : (
         <div className="overflow-x-auto">
           <table className="table w-full">
             <thead>
@@ -194,6 +153,9 @@ export default function Home() {
           </table>
         </div>
       )}
+      <Link href="/" className="btn btn-link mt-4">
+        Back to Home
+      </Link>
     </div>
   );
 }

@@ -1,8 +1,17 @@
 import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+
+dotenv.config();
+console.log(process.env.DATABASE_URL);
 
 const prismaClientSingleton = () => {
   return new PrismaClient({
-    datasourceUrl: process.env.DATABASE_URL,
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+    log: ['query', 'info', 'warn', 'error'],
   });
 };
 
@@ -17,3 +26,8 @@ const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 export default prisma;
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+// Test the database connection
+prisma.$connect()
+  .then(() => console.log('Database connection successful'))
+  .catch((e) => console.error('Database connection failed:', e));

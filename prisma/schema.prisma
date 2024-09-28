@@ -8,9 +8,10 @@ datasource db {
 }
 
 model Link {
-  id        Int      @id @default(autoincrement())
-  url       String
-  type      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  url              String   @unique
+  type             String
+  processedContent String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
