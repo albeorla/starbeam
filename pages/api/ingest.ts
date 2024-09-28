@@ -24,20 +24,20 @@ function detectLinkType(url: string): LinkType {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    return res.status(405).json({ error: 'Method Not Allowed', details: `The ${req.method} method is not allowed for this endpoint. Use POST instead.` });
   }
 
   const { url } = req.body;
 
   if (!url) {
-    return res.status(400).json({ error: 'URL is required' });
+    return res.status(400).json({ error: 'Bad Request', details: 'URL is required in the request body.' });
   }
 
   // Basic URL validation
   try {
     new URL(url);
   } catch (error) {
-    return res.status(400).json({ error: 'Invalid URL format' });
+    return res.status(400).json({ error: 'Invalid URL', details: 'The provided URL is not in a valid format.' });
   }
 
   // Detect link type
@@ -50,7 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (existingLink) {
-      return res.status(200).json({ message: 'Link already exists in the database', link: existingLink });
+      return res.status(200).json({ 
+        message: 'Link Already Exists', 
+        details: 'The provided URL is already stored in the database.',
+        link: existingLink 
+      });
     }
 
     // Store the link in the database
@@ -61,9 +65,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    return res.status(201).json({ message: 'Link processed and stored successfully', link: newLink });
+    return res.status(201).json({ 
+      message: 'Link Stored Successfully', 
+      details: 'The provided URL has been processed and stored in the database.',
+      link: newLink 
+    });
   } catch (error) {
     console.error('Error processing link:', error);
-    return res.status(500).json({ error: 'An error occurred while processing the link' });
+    return res.status(500).json({ 
+      error: 'Internal Server Error', 
+      details: 'An unexpected error occurred while processing the link. Please try again later.'
+    });
   }
 }
